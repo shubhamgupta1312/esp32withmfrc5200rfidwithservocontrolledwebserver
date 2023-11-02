@@ -23,6 +23,7 @@ AsyncWebServer server(80);
 bool blueLEDOn = true;
 bool greenLEDOn = false;
 bool redLEDOn = false;
+bool gateOpen = false; // Track gate state
 
 void setup() {
   Serial.begin(115200);
@@ -117,6 +118,11 @@ void loop() {
           blueLEDOn = false;
         }
         openGate();
+        gateOpen = true;
+        delay(10000);
+        closeGate(); 
+        delay(5000);
+  // Indicate that the gate is open
       } else {
         beepHigh(1000);
         digitalWrite(RED_LED, HIGH);
@@ -130,8 +136,11 @@ void loop() {
           blueLEDOn = false;
         }
         closeGate();
+        gateOpen = false;
+        delay(5000);
+               // Indicate that the gate is closed
       }
-
+      resetSystem();
       rfid.PICC_HaltA();
       rfid.PCD_StopCrypto1();
     }
@@ -157,6 +166,10 @@ void openGate() {
   gateServo.write(180); // Open the gate to 180 degrees
   delay(1000); // Delay to allow the gate to open to the desired position
   gateServo.detach(); // Detach the servo to save power
+  digitalWrite(RED_LED, LOW); 
+  digitalWrite(GREEN_LED, HIGH);
+  digitalWrite(BLUE_LED, LOW);
+        
 }
 
 void closeGate() {
@@ -164,15 +177,32 @@ void closeGate() {
   gateServo.write(20); // Close the gate to 20 degrees
   delay(1000); // Delay to allow the gate to close to the desired position
   gateServo.detach(); // Detach the servo to save power
+  digitalWrite(RED_LED, HIGH); 
+  digitalWrite(GREEN_LED, LOW);
+  digitalWrite(BLUE_LED, LOW);
+  
 }
 
 void resetSystem() {
   // If the gate is open, close it before resetting
-  if (gateServo.attached()) {
+  if (gateOpen) {
     closeGate();
+    gateOpen = false; // Indicate that the gate is closed
   }
   // Initialize the servo to 0 degrees
   gateServo.attach(SERVO_PIN);
   gateServo.write(0);
-  ESP.restart(); // Restart the ESP32
+  digitalWrite(BLUE_LED, HIGH);
+  blueLEDOn = true;
+  // ESP.restart(); // Restart the ESP32
+
+  if (redLEDOn) {
+  digitalWrite(RED_LED, LOW);
+  redLEDOn = false;
+}
+        
+if (greenLEDOn) {
+digitalWrite(GREEN_LED, LOW);
+greenLEDOn = false;
+        }
 }
