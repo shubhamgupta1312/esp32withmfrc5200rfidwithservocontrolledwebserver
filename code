@@ -184,6 +184,10 @@ void closeGate() {
 }
 
 void resetSystem() {
+  if (redLEDOn) {
+  digitalWrite(RED_LED, LOW);
+  redLEDOn = false;
+}
   // If the gate is open, close it before resetting
   if (gateOpen) {
     closeGate();
@@ -192,17 +196,21 @@ void resetSystem() {
   // Initialize the servo to 0 degrees
   gateServo.attach(SERVO_PIN);
   gateServo.write(0);
-  digitalWrite(BLUE_LED, HIGH);
-  blueLEDOn = true;
-  // ESP.restart(); // Restart the ESP32
+  // Turn on the blue LED only if the gate is closed
+  if (!gateOpen) {
+    digitalWrite(RED_LED,LOW);
+    digitalWrite(BLUE_LED, HIGH);
+    blueLEDOn = true;
+  } 
 
+  // Turn off the red and green LEDs
   if (redLEDOn) {
-  digitalWrite(RED_LED, LOW);
-  redLEDOn = false;
-}
-        
-if (greenLEDOn) {
-digitalWrite(GREEN_LED, LOW);
-greenLEDOn = false;
-        }
+    digitalWrite(RED_LED, LOW);
+    redLEDOn = false;
+  }
+
+  if (greenLEDOn) {
+    digitalWrite(GREEN_LED, LOW);
+    greenLEDOn = false;
+  }
 }
